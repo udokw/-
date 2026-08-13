@@ -73,7 +73,7 @@ class AppState: ObservableObject {
 
             // 延迟执行，让 Alert 先显示
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                UIApplication.shared.open(telURL)
+                UIApplication.shared.open(telURL, options: [:], completionHandler: nil)
             }
         }
     }
@@ -90,7 +90,7 @@ class AppState: ObservableObject {
             showActionAlert = true
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                UIApplication.shared.open(telURL)
+                UIApplication.shared.open(telURL, options: [:], completionHandler: nil)
             }
         }
     }
@@ -107,7 +107,7 @@ class AppState: ObservableObject {
             showActionAlert = true
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                UIApplication.shared.open(telURL)
+                UIApplication.shared.open(telURL, options: [:], completionHandler: nil)
             }
         }
     }

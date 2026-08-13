@@ -22,7 +22,7 @@ struct ActivateForwardingIntent: AppIntent {
         SharedSettings.lastActionTime = Date()
 
         if let telURL = SharedSettings.telURL(for: ussd) {
-            UIApplication.shared.open(telURL)
+            _ = await UIApplication.shared.open(telURL)
         }
 
         return .result(dialog: "正在拨打 \(ussd)，请确认")
@@ -42,7 +42,7 @@ struct DeactivateForwardingIntent: AppIntent {
         SharedSettings.lastActionTime = Date()
 
         if let telURL = SharedSettings.telURL(for: ussd) {
-            UIApplication.shared.open(telURL)
+            _ = await UIApplication.shared.open(telURL)
         }
 
         return .result(dialog: "正在拨打 \(ussd)，请确认")
@@ -62,7 +62,7 @@ struct CheckStatusIntent: AppIntent {
         SharedSettings.lastActionTime = Date()
 
         if let telURL = SharedSettings.telURL(for: ussd) {
-            UIApplication.shared.open(telURL)
+            _ = await UIApplication.shared.open(telURL)
         }
 
         return .result(dialog: "正在拨打 \(ussd)，请确认")
