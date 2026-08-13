@@ -127,9 +127,10 @@ class SharedSettings {
     }
 
     /// 生成 tel: URL
+    /// tel: URL 中 # 必须编码为 %23，* 保持原样
     static func telURL(for ussd: String) -> URL? {
-        // tel: URL 需要编码特殊字符
-        let encoded = ussd.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ussd
+        // 只编码 # 号，* 号不编码
+        let encoded = ussd.replacingOccurrences(of: "#", with: "%23")
         return URL(string: "tel:\(encoded)")
     }
 
