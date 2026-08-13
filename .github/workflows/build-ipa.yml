@@ -1,0 +1,109 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show directory structure
+        run: |
+          echo "=== File listing ==="
+          find . -type f -not -path './.git/*' | sort
+          echo ""
+          echo "=== project.yml content ==="
+          cat project.yml 2>/dev/null || echo "project.yml NOT FOUND!"
+
+      - name: Select Xcode
+        run: |
+          ls /Applications/ | grep Xcode
+          # 自动选择最新的 Xcode
+          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          echo "Using: $LATEST_XCODE"
+          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install xcodegen
+        run: |
+          brew untap aws/tap 2>/dev/null || true
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Generate Xcode Project
+        run: |
+          xcodegen generate
+          echo "=== Generated project ==="
+          ls -la *.xcodeproj
+
+      - name: List schemes
+        run: |
+          xcodebuild -project CallForwarder.xcodeproj -list
+
+      - name: Build App
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project CallForwarder.xcodeproj \
+            -scheme CallForwarder \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            2>&1 | tee build.log
+
+      - name: Find built .app
+        run: |
+          echo "=== Build Products ==="
+          find build/Build/Products -type d -name "*.app" 2>/dev/null || echo "No products directory"
+          APP_PATH=$(find build/Build/Products -name "CallForwarder.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find build/Build/Products -name "*.app" -type d | head -1)
+          fi
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: No .app found!"
+            echo "=== Last 100 lines of build log ==="
+            tail -100 build.log
+            exit 1
+          fi
+          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+          echo "Found: $APP_PATH"
+
+      - name: Create IPA
+        run: |
+          rm -rf Payload
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          
+          APP_NAME=$(basename "$APP_PATH")
+          find build/Build/Products -name "*.appex" -type d | while read appex; do
+            echo "Adding extension: $(basename $appex)"
+            mkdir -p "Payload/$APP_NAME/PlugIns"
+            cp -r "$appex" "Payload/$APP_NAME/PlugIns/"
+          done
+          
+          zip -r CallForwarder.ipa Payload -x "*.DS_Store"
+          ls -lh CallForwarder.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: CallForwarder-IPA
+          path: CallForwarder.ipa
+          retention-days: 30
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
