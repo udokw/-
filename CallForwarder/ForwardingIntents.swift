@@ -79,8 +79,8 @@ struct CallForwarderShortcuts: AppShortcutsProvider {
             intent: ActivateForwardingIntent(),
             phrases: [
                 "激活呼叫转移 \(.applicationName)",
-                "开启呼叫转移",
-                "转移来电"
+                "开启呼叫转移 \(.applicationName)",
+                "转移来电 \(.applicationName)"
             ],
             shortTitle: "开启呼叫转移",
             systemImageName: "phone.arrow.up.right"
@@ -89,7 +89,7 @@ struct CallForwarderShortcuts: AppShortcutsProvider {
             intent: DeactivateForwardingIntent(),
             phrases: [
                 "取消呼叫转移 \(.applicationName)",
-                "关闭呼叫转移"
+                "关闭呼叫转移 \(.applicationName)"
             ],
             shortTitle: "关闭呼叫转移",
             systemImageName: "phone.down.fill"
